@@ -17,3 +17,15 @@ export interface Transaction {
 
 }
 
+// "The draft stores what the form boxes give back, which is mostly text. 
+// The finished transaction above stores the cleaned-up version."
+
+export interface TransactionDraft {
+  amount: string; // text from the input box, converted to a number on submit
+  date: string;
+  type: TransactionType;
+  category: TransactionCategory | ""; //"" = nothing chosen yet
+  priority: string; //text from the dropdown, validated then converted on submit
+  description: string; //"" when blank, becomes undefined on submit
+  isRecurring: boolean;
+}
