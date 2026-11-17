@@ -8,6 +8,7 @@ import type {
   TransactionError,
   Priority,
 } from "./types";
+import SpendingChart from "./SpendingChart";
 
 function validate(draft: TransactionDraft): TransactionError {
   const errors: TransactionError = {};
@@ -107,8 +108,8 @@ function App() {
         <h1> AI Personal Finance Dashboard</h1>
       </header>
 
-      <main>
-        <form onSubmit={handleSubmit}>
+      <main className="layout">
+        <form className="form-panel" onSubmit={handleSubmit}>
           <label htmlFor="amount">Amount($)</label>
           <input
             id="amount"
@@ -212,13 +213,19 @@ function App() {
           <button type="submit">Log Transaction</button>
         </form>
 
-        <ul>
-          {transactions.map((t) => (
-            <li key={t.id}>
-              {t.date} · {t.category} · ${t.amount}
-            </li>
-          ))}
-        </ul>
+        <div className="right-panel">
+          <SpendingChart />
+          <section className="list-panel">
+            <h2>Transactions</h2>
+            <ul>
+              {transactions.map((t) => (
+                <li key={t.id}>
+                  {t.date} · {t.category} · ${t.amount}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </main>
 
       <footer>
