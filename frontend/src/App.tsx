@@ -39,6 +39,26 @@ function validate(draft: TransactionDraft): TransactionError {
   return errors;
 }
 
+function getToday(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function createEmptyDraft(): TransactionDraft {
+  return {
+    amount: "",
+    date: getToday(),
+    type: "Expense",
+    category: "",
+    priority: "",
+    description: "",
+    isRecurring: false,
+  };
+}
+
 //functional component - a reusable chunk of UI, written in a function
 // "When the page first loads, the frontend sends a request to the backend
 // asking 'are you there,'
@@ -46,19 +66,13 @@ function validate(draft: TransactionDraft): TransactionError {
 // proving the two programs are actually talking to each other over the network."
 
 function App() {
-  const [draft, setDraft] = useState<TransactionDraft>({
-    amount: "",
-    date: "2026-11-17",
-    type: "Expense",
-    category: "",
-    priority: "",
-    description: "",
-    isRecurring: false,
-  });
+  const [draft, setDraft] = useState<TransactionDraft>(createEmptyDraft);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const [errors, setErrors] = useState<TransactionError>({});
+
+  // Handle Submit
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -85,15 +99,7 @@ function App() {
     setTransactions((prev) => [...prev, newTransaction]);
 
     // Resets the form after the transaction is saved
-    setDraft({
-      amount: "",
-      date: "2026-11-17",
-      type: "Expense",
-      category: "",
-      priority: "",
-      description: "",
-      isRecurring: false,
-    });
+    setDraft(createEmptyDraft());
   }
   return (
     <>
