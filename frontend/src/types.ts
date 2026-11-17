@@ -29,3 +29,11 @@ export interface TransactionDraft {
   description: string; //"" when blank, becomes undefined on submit
   isRecurring: boolean;
 }
+
+export interface TransactionError {
+  amount?: string;
+  date?: string;
+  category?: string;
+  priority?: string;
+  description?: string;
+}
