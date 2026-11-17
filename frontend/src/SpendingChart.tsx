@@ -24,7 +24,7 @@ function SpendingChart() {
             <XAxis dataKey="category" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="total" />
+            <Bar dataKey="total" fill="#818cf8" />
           </BarChart>
         </ResponsiveContainer>
       </div>
