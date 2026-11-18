@@ -28,6 +28,16 @@ app.get("/api/health/db", async (_req, res) => {
   }
 });
 
+app.get("/api/transactions", async (_req, res) => {
+  try {
+    const result = await pool.query(`SELECT id, amount::float8 AS amount, to_char(transaction_date, 'YYYY-MM-DD') AS date, type, category, priority, description, is_recurring AS "isRecurring" FROM transactions ORDER BY transaction_date DESC, created_at DESC`);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load transactions" });
+  }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 
