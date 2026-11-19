@@ -81,6 +81,8 @@ function App() {
 
   const [errors, setErrors] = useState<TransactionError>({});
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   // using [] allows the useEffect to watch nothing, hence there's no infinite looping when a rerun is triggered
   useEffect(() => {
     fetchTransactions().then(setTransactions);
@@ -89,6 +91,7 @@ function App() {
   // Handle Submit
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
+    setSubmitError(null); // CHANGE 1
 
     const newErrors = validate(draft);
     setErrors(newErrors);
@@ -107,19 +110,25 @@ function App() {
       isRecurring: draft.isRecurring,
     };
 
-    const response = await fetch(`${API_URL}/api/transactions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      // CHANGE 2: opens here
+      const response = await fetch(`${API_URL}/api/transactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      console.error("Failed to save transaction");
-      return;
+      if (!response.ok) {
+        throw new Error("Failed to save transaction"); // CHANGE 3
+      }
+
+      setTransactions(await fetchTransactions());
+      setDraft(createEmptyDraft());
+    } catch (err) {
+      // CHANGE 4
+      console.error(err);
+      setSubmitError("Could not save the transaction. Please try again.");
     }
-
-    setTransactions(await fetchTransactions());
-    setDraft(createEmptyDraft());
   }
   return (
     <>
@@ -230,6 +239,7 @@ function App() {
           />
 
           <button type="submit">Log Transaction</button>
+          {submitError && <p>{submitError}</p>}
         </form>
 
         <div className="right-panel">
