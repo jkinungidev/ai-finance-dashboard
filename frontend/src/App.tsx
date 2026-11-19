@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import type {
   TransactionCategory,
@@ -9,6 +9,8 @@ import type {
   Priority,
 } from "./types";
 import SpendingChart from "./SpendingChart";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 function validate(draft: TransactionDraft): TransactionError {
   const errors: TransactionError = {};
@@ -60,6 +62,12 @@ function createEmptyDraft(): TransactionDraft {
   };
 }
 
+//both the page load and the post save live in the same place, as they need the same fetch
+async function fetchTransactions(): Promise<Transaction[]> {
+  const response = await fetch(`${API_URL}/api/transactions`);
+  return response.json();
+}
+
 //functional component - a reusable chunk of UI, written in a function
 // "When the page first loads, the frontend sends a request to the backend
 // asking 'are you there,'
@@ -73,20 +81,22 @@ function App() {
 
   const [errors, setErrors] = useState<TransactionError>({});
 
-  // Handle Submit
+  // using [] allows the useEffect to watch nothing, hence there's no infinite looping when a rerun is triggered
+  useEffect(() => {
+    fetchTransactions().then(setTransactions);
+  }, []);
 
-  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  // Handle Submit
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const newErrors = validate(draft);
     setErrors(newErrors);
-
     if (Object.keys(newErrors).length > 0) {
       return;
     }
 
-    const newTransaction: Transaction = {
-      id: crypto.randomUUID(),
+    const payload: Omit<Transaction, "id"> = {
       amount: Number(draft.amount),
       date: draft.date,
       type: draft.type,
@@ -97,9 +107,18 @@ function App() {
       isRecurring: draft.isRecurring,
     };
 
-    setTransactions((prev) => [...prev, newTransaction]);
+    const response = await fetch(`${API_URL}/api/transactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-    // Resets the form after the transaction is saved
+    if (!response.ok) {
+      console.error("Failed to save transaction");
+      return;
+    }
+
+    setTransactions(await fetchTransactions());
     setDraft(createEmptyDraft());
   }
   return (
