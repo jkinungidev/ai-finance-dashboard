@@ -68,16 +68,21 @@ async function fetchTransactions(): Promise<Transaction[]> {
   return response.json();
 }
 
-//functional component - a reusable chunk of UI, written in a function
-// "When the page first loads, the frontend sends a request to the backend
-// asking 'are you there,'
-// and once it gets an answer back, it displays that answer on the page
-// proving the two programs are actually talking to each other over the network."
+/**
+ * App is the whole dashboard screen. It owns the state (the form draft, the
+ * validation errors and the list of transactions) and shares it with the
+ * form, the list and the chart.
+ *
+ * Data flow: on page load it fetches saved transactions from the API; on
+ * submit it validates the draft, POSTs it, then re-fetches the list so the
+ * screen always matches the database. The chart's totals are derived from
+ * that list, never stored separately.
+ */
 
 function App() {
   const [draft, setDraft] = useState<TransactionDraft>(createEmptyDraft);
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]); //transactions holds the list that the page uses for transactions
 
   const [errors, setErrors] = useState<TransactionError>({});
 
@@ -91,7 +96,7 @@ function App() {
   // Handle Submit
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitError(null); // CHANGE 1
+    setSubmitError(null);
 
     const newErrors = validate(draft);
     setErrors(newErrors);
@@ -111,7 +116,6 @@ function App() {
     };
 
     try {
-      // CHANGE 2: opens here
       const response = await fetch(`${API_URL}/api/transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,13 +123,12 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save transaction"); // CHANGE 3
+        throw new Error("Failed to save transaction");
       }
 
       setTransactions(await fetchTransactions());
       setDraft(createEmptyDraft());
     } catch (err) {
-      // CHANGE 4
       console.error(err);
       setSubmitError("Could not save the transaction. Please try again.");
     }
@@ -243,13 +246,13 @@ function App() {
         </form>
 
         <div className="right-panel">
-          <SpendingChart />
+          <SpendingChart transactions={transactions} />
           <section className="list-panel">
             <h2>Transactions</h2>
             <ul>
               {transactions.map((t) => (
                 <li key={t.id}>
-                  {t.date} · {t.category} · ${t.amount}
+                  {t.date} · {t.category} · ${t.amount.toFixed(2)}
                 </li>
               ))}
             </ul>
